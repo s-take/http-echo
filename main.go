@@ -11,15 +11,10 @@ import (
 func main() {
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", index)
-	mux.HandleFunc("/dump", dumprequest)
+	mux.HandleFunc("/", dumprequest)
 	mux.HandleFunc("/wait", wait)
 	log.Fatal(http.ListenAndServe(":8080", mux))
 
-}
-
-func index(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "This is echo service\n")
 }
 
 func dumprequest(w http.ResponseWriter, r *http.Request) {
@@ -30,6 +25,7 @@ func dumprequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func wait(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, "This is echo service\n")
 	time.Sleep(10 * time.Second)
 	io.WriteString(w, "Waited 10 seconds \n")
 }
