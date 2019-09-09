@@ -19,7 +19,7 @@ func main() {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Hello, world\n")
+	io.WriteString(w, "This is echo service\n")
 }
 
 func dumprequest(w http.ResponseWriter, r *http.Request) {
