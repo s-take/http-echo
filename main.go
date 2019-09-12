@@ -32,7 +32,7 @@ func slow(w http.ResponseWriter, r *http.Request) {
 }
 
 func err(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusInternalServerError)
+	w.WriteHeader(http.StatusServiceUnavailable)
 	io.WriteString(w, "This is echo service\n")
 	io.WriteString(w, "Error!! \n")
 }
