@@ -1,14 +1,33 @@
-FROM golang:1.11-alpine AS build
+# step 1: build
+FROM golang:1.13 AS build
 
-RUN apk --no-cache add gcc g++ make ca-certificates git
-WORKDIR /go/src/github.com/s-take/http-echo
+RUN groupadd -g 10001 myapp \
+    && useradd -u 10001 -g myapp myapp
 
-COPY main.go main.go
+RUN mkdir /go-app
+WORKDIR /go-app
+COPY go.mod go.sum ./
 
-RUN go install ./...
+RUN go mod download
+COPY . .
 
-# 上記でできたバイナリだけをalpineに入れる
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /go/bin/go-app
+
+# -----------------------------------------------------------------------------
+# step 2: exec
 FROM alpine:3.10
-WORKDIR /usr/bin
-COPY --from=build /go/bin .
-CMD ["http-echo"]
+
+# add zoneinfo(JST)
+RUN apk --no-cache add tzdata && \
+    cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+
+COPY --from=build /go/bin/go-app /go/bin/go-app
+COPY --from=build /etc/group /etc/group
+COPY --from=build /etc/passwd /etc/passwd
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
+EXPOSE 8080
+
+USER myapp
+
+ENTRYPOINT ["/go/bin/go-app"]
