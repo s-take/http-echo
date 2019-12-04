@@ -24,6 +24,12 @@ func getRequests() int64 {
 	return atomic.LoadInt64(&requests)
 }
 
+// increments the number of requests and returns the new value
+func clearRequests() error {
+	requests = 0
+	return nil
+}
+
 var logger *zap.Logger
 
 func init() {
@@ -61,6 +67,7 @@ func init() {
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", dump)
+	mux.HandleFunc("/clearrequests", clearrequests)
 	mux.HandleFunc("/slow", slow)
 	mux.HandleFunc("/error", err)
 	log.Fatal(http.ListenAndServe(":8080", mux))
@@ -68,11 +75,16 @@ func main() {
 
 func dump(w http.ResponseWriter, r *http.Request) {
 	incRequests()
-	logger.Info("test", zap.String("url", r.URL.Path), zap.Int64("count", getRequests()))
+	cnt := getRequests()
+	logger.Info("test", zap.String("url", r.URL.Path), zap.Int64("count", cnt))
 	dump, _ := httputil.DumpRequest(r, true)
 	io.WriteString(w, "This is echo service\n")
 	io.WriteString(w, "===DumpRequest===\n")
 	io.WriteString(w, string(dump))
+}
+
+func clearrequests(w http.ResponseWriter, r *http.Request) {
+	clearRequests()
 }
 
 func slow(w http.ResponseWriter, r *http.Request) {
